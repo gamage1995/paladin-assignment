@@ -31,7 +31,8 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
 
   try {
     jwt.verify(accessToken, process.env.ACCESS_SECRET)
-    next();
+    next()
+    return
   } catch (_error) {
     console.log('Access Token Invalid')
   }

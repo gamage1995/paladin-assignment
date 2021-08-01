@@ -1,6 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { Container, Row, Col, Form, Button } from 'react-bootstrap'
-import styled from 'styled-components';
+import styled from 'styled-components'
+import { useHistory } from "react-router-dom";
+
+import { AppContext } from '../context/appContext';
+
+import { login, register } from '../services/api'
+
+import { FormStates } from '../types/common'
 
 const FullHeightContainer = styled(Container)`
   height : 100vh;
@@ -29,16 +36,51 @@ const SwitchFormText = styled.p`
   cursor : pointer;
 `
 
-enum FormStates {
-  Login = "Login",
-  Register = "Register"
-}
+const validateEmailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 
 function LoginPage() {
+  const history = useHistory();
+
+  const context = useContext(AppContext)
   const [formState, setFormState] = useState('Login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+
+  const signIn = async () => {
+    if (signInInputsValid()) {
+      try {
+        const response = await login({ email, password })
+        context?.setToken(response.data.payload.accessToken)
+        history.push('/')
+      } catch (error) {
+        console.log(error.response)
+      }
+    }
+  }
+
+  const signUp = async () => {
+    if (registerInputsValid()) {
+      try {
+        const response = await register({ email, password })
+        context?.setToken(response.data.payload.accessToken)
+        history.push('/')
+      } catch (error) {
+        console.log(error.response)
+      }
+    }
+  }
+
+  const signInInputsValid = () => {
+    return (validateEmailRegex.test(email)
+      && password.toString().trim() !== '')
+  }
+
+  const registerInputsValid = () => {
+    return (validateEmailRegex.test(email)
+      && password.toString().trim() !== ''
+      && password.toString().trim() === confirmPassword.toString().trim())
+  }
 
   return (
     <FullHeightContainer fluid>
@@ -65,19 +107,25 @@ function LoginPage() {
                     <Form.Control value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} type="password" placeholder="Re-enter Password" />
                   </Form.Group>
                 }
-
-                <Button variant="primary" type="submit">
-                  {formState}
-                </Button>
               </Form>
               {
                 formState === FormStates.Login ?
-                  <SwitchFormText onClick={() => setFormState('Register')}>
-                    Don't have an account ? Register
-                  </SwitchFormText> :
-                  <SwitchFormText onClick={() => setFormState('Login')}>
-                    Already have an account ? Login
-                  </SwitchFormText>
+                  <React.Fragment>
+                    <Button variant="primary" type="submit" onClick={() => signIn()}>
+                      Login
+                    </Button>
+                    <SwitchFormText onClick={() => setFormState('Register')}>
+                      Don't have an account ? Register
+                    </SwitchFormText>
+                  </React.Fragment> :
+                  <React.Fragment>
+                    <Button variant="primary" type="submit" onClick={() => signUp()}>
+                      Register
+                    </Button>
+                    <SwitchFormText onClick={() => setFormState('Register')}>
+                      Already have an account ? Login
+                    </SwitchFormText>
+                  </React.Fragment>
               }
             </LoginWindow>
           </LoginWindowCover>

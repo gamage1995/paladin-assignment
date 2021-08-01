@@ -18,15 +18,3 @@ movieRouter.post("/getMovies",
         payload: controllerResponse.payload
       })
   })
-
-movieRouter.post("/addMovies", async (request, response) => {
-  let email = request.body.email;
-  let movies = request.body.movies;
-  let controllerResponse = await MovieController.addUserMovies({ email, movies })
-  response
-    .status(controllerResponse.status)
-    .send({
-      responseMessage: controllerResponse.responseMessage,
-      payload: controllerResponse.payload
-    })
-})
